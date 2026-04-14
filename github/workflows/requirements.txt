@@ -1,0 +1,5 @@
+flet
+flet==0.21.0
+sqlite3-binary
+packaging
+urllib3
