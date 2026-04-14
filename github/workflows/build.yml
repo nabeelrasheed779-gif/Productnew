@@ -1,0 +1,47 @@
+name: Secure Flet Android Build
+on:
+  push:
+    branches: [ main ] # سيتم البناء تلقائياً عند رفع الكود
+  workflow_dispatch: # يتيح لك بدء البناء يدوياً من تبويب Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. سحب الكود من المستودع
+        uses: actions/checkout@v4
+
+      - name: 2. إعداد بيئة بايثون
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 3. إعداد الجافا (مهم جداً للأندرويد)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 4. إعداد محرك فلاتر
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: 5. تثبيت مكتبة Flet وأدوات البناء
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet
+          # إذا كان لديك ملف requirements.txt سيتم تثبيته هنا
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: 6. بناء ملف الـ APK
+        run: |
+          # تأكد أن اسم الحزمة (package) يطابق ما وضعناه في كود البايثون
+          flet build apk --project "Smart-Grocery-App" --org "com.flet.nabel"
+
+      - name: 7. رفع التطبيق الجاهز (Artifacts)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Smart-Grocery-App
+          path: build/apk/*.apk
